@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+npm-debug.log
+package-lock.json
+
+# Environment
+.env
+.env.local
+
+# Build outputs
+build/
+dist/
+coverage/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# Secrets
+secrets/
+*.pem
+*.key
