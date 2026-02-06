@@ -9,7 +9,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci
+RUN npm install
 
 # Copy source code
 COPY . .
@@ -52,26 +52,3 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]
-```
-
----
-
-### **3.5.3: Create .dockerignore**
-
-Create `.dockerignore`:
-```
-node_modules
-npm-debug.log
-build
-.git
-.gitignore
-README.md
-.env.local
-.env.development
-.env.test
-coverage
-.vscode
-.idea
-*.swp
-*.swo
-.DS_Store

@@ -3,20 +3,16 @@
 # ============================================
 FROM node:20-alpine AS builder
 
-# Set working directory
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies (including dev dependencies for build)
-RUN npm ci
+# Install dependencies
+RUN npm install
 
-# Copy source code
+# Copy application code
 COPY . .
-
-# Run tests during build (optional - comment out if you want faster builds)
-# RUN npm test
 
 # ============================================
 # Production Stage
@@ -37,7 +33,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install only production dependencies
-RUN npm ci --only=production && \
+RUN npm install --only=production && \
     npm cache clean --force
 
 # Copy application code from builder
@@ -58,49 +54,3 @@ ENTRYPOINT ["dumb-init", "--"]
 
 # Start the application
 CMD ["node", "src/server.js"]
-```
-
----
-
-### **2.3: Create .dockerignore**
-
-Create `.dockerignore` in the backend directory:
-```
-# Dependencies
-node_modules
-npm-debug.log
-
-# Testing
-coverage
-.nyc_output
-
-# Development
-.env.local
-.env.development
-*.md
-.git
-.gitignore
-
-# IDE
-.vscode
-.idea
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# CI/CD
-.github
-.gitlab-ci.yml
-
-# Documentation
-docs
-*.md
-README*
-
-# Tests (if you don't want them in production image)
-tests
-*.test.js
-jest.config.js

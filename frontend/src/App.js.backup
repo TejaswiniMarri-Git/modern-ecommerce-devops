@@ -1,0 +1,236 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import './App.css';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+function App() {
+  const [products, setProducts] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState('products');
+  
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    price: '',
+    category: 'Electronics',
+    stock: '',
+    imageUrl: ''
+  });
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API_URL}/api/products`);
+      setProducts(response.data.data);
+      setError(null);
+    } catch (err) {
+      setError('Failed to fetch products');
+      console.error('Error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/stats`);
+      setStats(response.data.data);
+    } catch (err) {
+      console.error('Error:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+    fetchStats();
+  }, []);
+
+  const handleInputChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post(`${API_URL}/api/products`, {
+        ...formData,
+        price: parseFloat(formData.price),
+        stock: parseInt(formData.stock)
+      });
+      setFormData({ name: '', description: '', price: '', category: 'Electronics', stock: '', imageUrl: '' });
+      setActiveTab('products');
+      fetchProducts();
+      fetchStats();
+    } catch (err) {
+      alert('Failed to add product');
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Delete this product?')) {
+      try {
+        await axios.delete(`${API_URL}/api/products/${id}`);
+        fetchProducts();
+        fetchStats();
+      } catch (err) {
+        alert('Failed to delete');
+      }
+    }
+  };
+
+  return (
+    <div className="App">
+      <header className="header">
+        <div className="container">
+        </div>
+      </header>
+
+      {stats && (
+        <div className="stats-container">
+          <div className="container">
+            <div className="stats-grid">
+                <div className="stat-icon">📦</div>
+                  <h3>{stats.products}</h3>
+                  <p>Total Products</p>
+              </div>
+              <div className="stat-card">
+                <div className="stat-icon">🛍️</div>
+                <div className="stat-info">
+                  <p>Total Orders</p>
+                </div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-icon">💰</div>
+                <div className="stat-info">
+                  <h3>${stats.revenue.toFixed(2)}</h3>
+                  <p>Total Revenue</p>
+                </div>
+              </div>
+          </div>
+        </div>
+      )}
+
+      <div className="container main-content">
+        <div className="tabs">
+          <button className={activeTab === 'products' ? 'tab active' : 'tab'} onClick={() => setActiveTab('products')}>Products</button>
+          <button className={activeTab === 'add' ? 'tab active' : 'tab'} onClick={() => setActiveTab('add')}>Add Product</button>
+        </div>
+
+        {error && <div className="error-message">⚠️ {error}</div>}
+
+        {activeTab === 'products' && (
+          <div className="products-section">
+            {loading ? (
+              <div className="loading">Loading...</div>
+            ) : products.length === 0 ? (
+              <div className="empty-state">
+                <h3>No products yet</h3>
+                <p>Add your first product!</p>
+                <button onClick={() => setActiveTab('add')} className="btn-primary">Add Product</button>
+              </div>
+            ) : (
+              <div className="products-grid">
+                {products.map(product => (
+                  <div key={product._id} className="product-card">
+                    <div className="product-image">
+                      <img src={product.imageUrl || 'https://via.placeholder.com/300'} alt={product.name} />
+                      <span className="category-badge">{product.category}</span>
+                    </div>
+                    <div className="product-info">
+                      <h3>{product.name}</h3>
+                      <p className="description">{product.description}</p>
+                      <div className="product-meta">
+                        <div className="price">${product.price}</div>
+                        <div className="stock">Stock: <strong>{product.stock}</strong></div>
+                      </div>
+                      <button onClick={() => handleDelete(product._id)} className="btn-delete">Delete</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'add' && (
+          <div className="add-product-section">
+            <h2>Add New Product</h2>
+            <form onSubmit={handleSubmit} className="product-form">
+              <div className="form-group">
+                <label>Product Name *</label>
+                <input type="text" name="name" value={formData.name} onChange={handleInputChange} required placeholder="Enter product name" />
+              </div>
+              <div className="form-group">
+                <label>Description *</label>
+            </div>
+                  <h3>{stats.orders}</h3>
+                </div>
+                <textarea name="description" value={formData.description} onChange={handleInputChange} required placeholder="Enter description" rows="4" />
+                <div className="stat-info">
+              </div>
+              <div className="stat-card">
+              <div className="form-row">
+                <div className="form-group">
+          <h1>🛒 E-Commerce Platform</h1>
+                  <label>Price *</label>
+
+                  <input type="number" name="price" value={formData.price} onChange={handleInputChange} required step="0.01" min="0" placeholder="0.00" />
+
+                </div>
+
+                <div className="form-group">
+
+                  <label>Stock *</label>
+
+                  <input type="number" name="stock" value={formData.stock} onChange={handleInputChange} required min="0" placeholder="0" />
+
+                </div>
+
+              </div>
+
+              <div className="form-group">
+                <label>Category *</label>
+                <select name="category" value={formData.category} onChange={handleInputChange} required>
+                  <option value="Electronics">Electronics</option>
+                  <option value="Clothing">Clothing</option>
+                  <option value="Books">Books</option>
+
+                  <option value="Home">Home</option>
+
+                  <option value="Sports">Sports</option>
+                  <option value="Other">Other</option>
+
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Image URL (optional)</label>
+                <input type="url" name="imageUrl" value={formData.imageUrl} onChange={handleInputChange} placeholder="https://example.com/image.jpg" />
+              </div>
+
+              <div className="form-actions">
+                <button type="submit" className="btn-primary">Add Product</button>
+                <button type="button" onClick={() => setActiveTab('products')} className="btn-secondary">Cancel</button>
+              </div>
+
+            </form>
+          </div>
+
+        )}
+      </div>
+
+      <footer className="footer">
+        <div className="container">
+          <p>Built with ❤️ by <strong>Tejaswini Marri</strong> | Modern DevOps Pipeline Project 2026</p>
+
+          <p className="tech-stack">React • Node.js • MongoDB • Docker • Kubernetes • GitHub Actions</p>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+export default App;
