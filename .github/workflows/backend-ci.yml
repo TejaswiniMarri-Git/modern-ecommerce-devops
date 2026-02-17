@@ -15,7 +15,18 @@ jobs:
   test:
     name: Test Backend
     runs-on: ubuntu-latest
-    
+
+    services:
+      mongodb:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand(\"ping\")'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -31,13 +42,17 @@ jobs:
 
       - name: Run tests
         working-directory: ./backend
+        env:
+          MONGODB_URI: mongodb://localhost:27017/ecommerce-test
+          NODE_ENV: test
+          PORT: 5000
         run: npm test
 
   build:
     name: Build Docker Image
     runs-on: ubuntu-latest
     needs: test
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -51,15 +66,14 @@ jobs:
           context: ./backend
           file: ./backend/Dockerfile
           push: false
-          tags: backend:${{ github.sha }}
+          tags: backend:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
   security-scan:
     name: Security Scanning
     runs-on: ubuntu-latest
-    needs: build
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -69,10 +83,5 @@ jobs:
         with:
           scan-type: 'fs'
           scan-ref: './backend'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-
-      - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results.sarif'
+          format: 'table'
+          exit-code: '0'
